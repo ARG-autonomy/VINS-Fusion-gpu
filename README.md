@@ -1,6 +1,6 @@
 # ARG config
 
-- OpenCV `4.6` and `4.13` tested
+- OpenCV `4.6` and `4.12` tested
 
 # VINS-Fusion-gpu
 This repository is a version of VINS-Fusion with GPU acceleration. It can run on Nvidia TX2 in real-time. 
