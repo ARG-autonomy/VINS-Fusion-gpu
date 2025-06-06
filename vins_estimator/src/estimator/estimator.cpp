@@ -67,12 +67,15 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
     
     if(MULTIPLE_THREAD)  
     {     
-        if(inputImageCnt % 2 == 0)
-        {
-            mBuf.lock();
-            featureBuf.push(make_pair(t, featureFrame));
-            mBuf.unlock();
-        }
+        // if(inputImageCnt % 1 == 0)
+        // {
+        //     mBuf.lock();
+        //     featureBuf.push(make_pair(t, featureFrame));
+        //     mBuf.unlock();
+        // }
+        mBuf.lock();
+        featureBuf.push(make_pair(t, featureFrame));
+        mBuf.unlock();
     }
     else
     {
@@ -228,6 +231,97 @@ void Estimator::processMeasurements()
     }
 }
 
+// void Estimator::processMeasurements()
+// {
+//     while (1)
+//     {
+//         TicToc t_process;
+//         pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>> feature;
+//         vector<pair<double, Eigen::Vector3d>> accVector, gyrVector;
+
+//         // Lock and only keep the latest feature frame
+//         mBuf.lock();
+//         while (featureBuf.size() > 1)
+//             featureBuf.pop();  // Drop older frames
+
+//         if (!featureBuf.empty())
+//         {
+//             feature = featureBuf.front();
+//             featureBuf.pop();
+//             mBuf.unlock();
+//         }
+//         else
+//         {
+//             mBuf.unlock();
+//             return;
+//         }
+
+//         curTime = feature.first + td;
+
+//         // Wait for corresponding IMU data
+//         while (1)
+//         {
+//             if (!USE_IMU || IMUAvailable(curTime))
+//                 break;
+//             else
+//             {
+//                 printf("wait for imu ... \n");
+//                 if (!MULTIPLE_THREAD)
+//                     return;
+//                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
+//             }
+//         }
+
+//         if (USE_IMU)
+//         {
+//             mBuf.lock();
+//             getIMUInterval(prevTime, curTime, accVector, gyrVector);
+//             mBuf.unlock();
+//         }
+
+//         if (USE_IMU)
+//         {
+//             if (!initFirstPoseFlag)
+//                 initFirstIMUPose(accVector);
+
+//             for (size_t i = 0; i < accVector.size(); i++)
+//             {
+//                 double dt;
+//                 if (i == 0)
+//                     dt = accVector[i].first - prevTime;
+//                 else if (i == accVector.size() - 1)
+//                     dt = curTime - accVector[i - 1].first;
+//                 else
+//                     dt = accVector[i].first - accVector[i - 1].first;
+
+//                 processIMU(accVector[i].first, dt, accVector[i].second, gyrVector[i].second);
+//             }
+//         }
+
+//         processImage(feature.second, feature.first);
+//         prevTime = curTime;
+
+//         printStatistics(*this, 0);
+
+//         std_msgs::Header header;
+//         header.frame_id = "world";
+//         header.stamp = ros::Time(feature.first);
+
+//         pubOdometry(*this, header);
+//         pubKeyPoses(*this, header);
+//         pubCameraPose(*this, header);
+//         pubPointCloud(*this, header);
+//         pubKeyframe(*this);
+//         pubTF(*this, header);
+
+//         printf("process measurement time: %f\n", t_process.toc());
+
+//         if (!MULTIPLE_THREAD)
+//             break;
+
+//         std::this_thread::sleep_for(std::chrono::milliseconds(2));
+//     }
+// }
 
 void Estimator::initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVector)
 {
